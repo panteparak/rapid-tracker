@@ -41,6 +41,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int PERMISSIONS_REQUEST = 1;
 
     private GoogleMap mMap;
+    final String path = "location/" + FirebaseAuth.getInstance().getCurrentUser().getUid();
+    final String users = "location/";
+    DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
+    DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference(users);
+    ValueEventListener refListener = null;
+    ValueEventListener userRefListener = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,17 +93,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setZoomGesturesEnabled(true);
-
-        final String path = "location/" + FirebaseAuth.getInstance().getCurrentUser().getUid();
-        final String users = "location/";
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
-        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference(users);
-        ref.addValueEventListener(new ValueEventListener() {
+        refListener = ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                GenericTypeIndicator<Map<String,Object>> t = new GenericTypeIndicator<>();
+                GenericTypeIndicator<Map<String,Object>> t = new GenericTypeIndicator<Map<String,Object>>(){};
                 Map<String,Object> location = dataSnapshot.getValue(t);
                 Log.d("Retrieved", "Value is: " + location);
 
@@ -119,10 +120,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        usersRef.addValueEventListener(new ValueEventListener() {
+        userRefListener = usersRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                GenericTypeIndicator<Map<String,Map<String,Object>>> t = new GenericTypeIndicator<>();
+                GenericTypeIndicator<Map<String,Map<String,Object>>> t = new GenericTypeIndicator<Map<String,Map<String,Object>>>(){};
 
                 Map<String,Map<String,Object>> location = dataSnapshot.getValue(t);
 
@@ -178,4 +179,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+
+        if (userRefListener != null && usersRef != null){
+            Log.d("MapDestroy", "usersRef");
+            usersRef.removeEventListener(userRefListener);
+        }
+
+        if (refListener != null && ref != null){
+            Log.d("MapDestroy", "ref");
+            ref.removeEventListener(refListener);
+        }
+    }
 }

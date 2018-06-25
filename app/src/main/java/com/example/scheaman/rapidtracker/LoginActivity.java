@@ -39,6 +39,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -150,6 +152,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private void attemptLogin() {
 
+        if (FirebaseAuth.getInstance().getCurrentUser() != null){
+            FirebaseAuth.getInstance().signOut();
+        }
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
